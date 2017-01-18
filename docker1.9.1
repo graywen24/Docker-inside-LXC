@@ -1,0 +1,80 @@
+deivce.allow =a 
+ for version 1.9.1
+root@cdos-t2:/var/run# docker info
+Containers: 4
+Images: 6
+Server Version: 1.9.1
+Storage Driver: devicemapper
+ Pool Name: docker-8:5-32122092-pool
+ Pool Blocksize: 65.54 kB
+ Base Device Size: 107.4 GB
+ Backing Filesystem:
+ Data file: /dev/loop0
+ Metadata file: /dev/loop1
+ Data Space Used: 1.984 GB
+ Data Space Total: 107.4 GB
+ Data Space Available: 105.4 GB
+ Metadata Space Used: 1.909 MB
+ Metadata Space Total: 2.147 GB
+ Metadata Space Available: 2.146 GB
+ Udev Sync Supported: true
+ Deferred Removal Enabled: false
+ Deferred Deletion Enabled: false
+ Deferred Deleted Device Count: 0
+ Data loop file: /var/lib/docker/devicemapper/devicemapper/data
+ Metadata loop file: /var/lib/docker/devicemapper/devicemapper/metadata
+ Library Version: 1.02.77 (2012-10-15)
+Execution Driver: native-0.2
+Logging Driver: json-file
+Kernel Version: 3.19.0-26-generic
+Operating System: Ubuntu 14.04.3 LTS (containerized)
+CPUs: 24
+Total Memory: 251.8 GiB
+Name: cdos-t2
+ID: UV7X:2KR6:5SXI:CYDF:IJEE:V2MW:ADCZ:4Y52:2KZP:C5EY:B55I:EAQH
+WARNING: No swap limit support
+WARNING: bridge-nf-call-iptables is disabled
+WARNING: bridge-nf-call-ip6tables is disabled
+
+remove allow = a 
+then have error
+root@cdos-t2:~# docker daemon --storage-opt=devicemapper -D
+DEBU[0000] docker group found. gid: 999
+DEBU[0000] Server created for HTTP on unix (/var/run/docker.sock)
+INFO[0000] API listen on /var/run/docker.sock
+ERRO[0000] [graphdriver] prior storage driver "devicemapper" failed: Unable to parse key/value option: devicemapper
+FATA[0000] Error starting daemon: error initializing graphdriver: Unable to parse key/value option: devicemapper
+root@cdos-t2:~#
+
+
+c===cgroup.mixed/rw====
+
+root@cdos-t2:~# docker info
+Containers: 0
+Images: 0
+Server Version: 1.9.1
+Storage Driver: vfs
+Execution Driver: native-0.2
+Logging Driver: json-file
+Kernel Version: 3.19.0-26-generic
+Operating System: Ubuntu 14.04.3 LTS (containerized)
+CPUs: 24
+Total Memory: 251.8 GiB
+Name: cdos-t2
+ID: UV7X:2KR6:5SXI:CYDF:IJEE:V2MW:ADCZ:4Y52:2KZP:C5EY:B55I:EAQH
+WARNING: No swap limit support
+WARNING: bridge-nf-call-iptables is disabled
+WARNING: bridge-nf-call-ip6tables is disabled
+root@cdos-t2:~# docker run -t -i ubuntu /bin/bash
+Unable to find image 'ubuntu:latest' locally
+latest: Pulling from library/ubuntu
+941598190a74: Pull complete
+3126f62a4524: Pull complete
+1720b694990c: Pull complete
+0d5531c1b127: Pull complete
+b0a1c2eced82: Pull complete
+4dec95160df1: Pull complete
+Digest: sha256:dbe36a89ad8daf8bbd2a68f14eab18b969d3f125104da51df6337bbf08d1c8ae
+Status: Downloaded newer image for ubuntu:latest
+Error response from daemon: Cannot start container e6c2abd77105d93f66de591d19495c4787d04b4d1fa83846a2f253a441efe33a: [8] System error: write /sys/fs/cgroup/devices/lxc/cdos-t2/docker/e6c2abd77105d93f66de591d19495c4787d04b4d1fa83846a2f253a441efe33a/devices.allow: operation not permitted
+root@cdos-t2:~#
