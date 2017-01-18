@@ -1,0 +1,94 @@
+docker inside LXC
+for host
+root@ctl-a2:/var/lib/lxc/cdos-t2# modprobe br_netfilter
+root@ctl-a2:/var/lib/lxc/cdos-t2# lsmod |grep -i net
+br_netfilter           20480  0
+bridge                110592  1 br_netfilter
+root@ctl-a2:/var/lib/lxc/cdos-t2# lsmod |grep -i nat
+nf_nat_masquerade_ipv4    16384  1 ipt_MASQUERADE
+iptable_nat            16384  1
+nf_nat_ipv4            16384  1 iptable_nat
+nf_nat                 24576  2 nf_nat_ipv4,nf_nat_masquerade_ipv4
+nf_conntrack          106496  5 nf_nat,nf_nat_ipv4,xt_conntrack,nf_nat_masquerade_ipv4,nf_conntrack_ipv4
+ip_tables              28672  2 iptable_filter,iptable_nat
+root@ctl-a2:/var/lib/lxc/cdos-t2#
+
+
+in LXC
+configure docker.list 
+root@cdos-t1:/etc/apt/sources.list.d# ls
+alchemy.list  docker.list  salt.list
+root@cdos-t1:/etc/apt/sources.list.d# cat docker.list
+deb https://apt.dockerproject.org/repo ubuntu-trusty main
+
+
+# apt-get install apt-transport-https ca-certificates
+#apt-get update
+ encountered error
+
+ W: Failed to fetch https://apt.dockerproject.org/repo/dists/ubuntu-trusty/main/binary-amd64/Packages  Could not resolve host: apt.dockerproject.org
+
+E: Some index files failed to download. They have been ignored, or old ones used instead.
+root@cdos-t2:/etc/apt/sources.list.d#
+W: GPG error: https://apt.dockerproject.org ubuntu-trusty InRelease: The following signatures couldn't be verified because the public key is not available: NO_PUBKEY F76221572C52609D
+root@cdos-t1:/etc/apt/sources.list.d#
+
+change DNS to 8.8.8.8 and add route of eth0 for going out to download apt-key
+
+root@cdos-t2:~# vim /etc/resolv.conf
+root@cdos-t2:~# apt-key adv --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+
+Executing: gpg --ignore-time-conflict --no-options --no-default-keyring --homedir /tmp/tmp.vrLWKqfY6G --no-auto-check-trustdb --trust-model always --keyring /etc/apt/trusted.gpg --primary-keyring /etc/apt/trusted.gpg --keyserver hkp://ha.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+gpg: requesting key 2C52609D from hkp server ha.pool.sks-keyservers.net
+gpg: key 2C52609D: public key "Docker Release Tool (releasedocker) <docker@docker.com>" imported
+gpg: Total number processed: 1
+gpg:               imported: 1  (RSA: 1)
+root@cdos-t2:~#
+
+root@cdos-t2:~# apt-cache madison docker-engine
+docker-engine | 1.12.6-0~ubuntu-trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.12.5-0~ubuntu-trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.12.4-0~ubuntu-trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.12.3-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.12.2-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.12.1-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.12.0-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.11.2-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.11.1-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.11.0-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.10.3-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.10.2-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.10.1-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.10.0-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.9.1-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.9.0-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+docker-engine | 1.8.3-0~trusty | https://apt.dockerproject.org/repo/ ubuntu-trusty/main amd64 Packages
+
+root@cdos-t2:~# apt-get install docker-engine=1.9.1-0~trusty
+
+
+
+root@cdos-t2:/var/run/docker/execdriver/native# docker run -t -i ubuntu /bin/bash
+Unable to find image 'ubuntu:latest' locally
+latest: Pulling from library/ubuntu
+941598190a74: Pull complete
+3126f62a4524: Pull complete
+1720b694990c: Pull complete
+0d5531c1b127: Pull complete
+b0a1c2eced82: Pull complete
+4dec95160df1: Pull complete
+Digest: sha256:dbe36a89ad8daf8bbd2a68f14eab18b969d3f125104da51df6337bbf08d1c8ae
+Status: Downloaded newer image for ubuntu:latest
+Error response from daemon: Cannot start container a82738a5efdd7854b3f240afbfb7525124976bbf8f5bbe2f663e6057a567b54c: [8] System error: write /sys/fs/cgroup/devices/lxc/cdos-t2/docker/a82738a5efdd7854b3f240afbfb7525124976bbf8f5bbe2f663e6057a567b54c/devices.allow: operation not permitted
+root@cdos-t2:/var/run/docker/execdriver/native# ps -ef |grep docker
+
+then change cgroup- allow =a
+
+
+
+
+=== remove===
+apt-get purge docker-engine
+apt-get autoremove --purge docker-engine
+  454  apt-get install docker-engine=1.9.1-0~trusty
+  apt-get purge docker-engine
